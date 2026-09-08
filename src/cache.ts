@@ -18,7 +18,7 @@ import {
   type PrimerMemory,
 } from './types';
 import { activeMemoryFor } from './memory/retrieve';
-import { getPiSessionsDir, getArchiveDir } from './paths';
+import { getPiSessionsDir, getClaudeProjectsDir, getCodexSessionsDir, getArchiveDir } from './paths';
 import type { MemoryRecord } from './memory/types';
 import {
   extractMessages,
@@ -67,7 +67,8 @@ export function getDbPath(): string {
 // Source-session roots, resolved lazily for the same hermetic-test reason. Real
 // runs have a stable env, so production behavior is unchanged by the laziness.
 function getClaudeDir(): string {
-  return process.env.SESSIONS_CLAUDE_DIR || join(home, '.claude/projects');
+  // Shared resolver (src/paths.ts), lazily resolved for hermetic tests.
+  return getClaudeProjectsDir();
 }
 function getPiDir(): string {
   // Shared resolver (src/paths.ts): honors SESSIONS_PI_DIR and Pi's own
@@ -76,7 +77,8 @@ function getPiDir(): string {
   return getPiSessionsDir();
 }
 function getCodexDir(): string {
-  return process.env.SESSIONS_CODEX_DIR || join(home, '.codex/sessions');
+  // Shared resolver (src/paths.ts), lazily resolved for hermetic tests.
+  return getCodexSessionsDir();
 }
 
 // Bump 6 -> 7: search becomes message-granular. A new message_fts table holds one
@@ -302,14 +304,16 @@ async function discoverFiles(): Promise<FileEntry[]> {
   const codexDir = getCodexDir();
 
   if (existsSync(claudeDir)) {
-    let dirs: string[];
-    try {
-      dirs = await readdir(claudeDir);
-    } catch {
-      dirs = [];
-    }
-    for (const dirname of dirs) {
-      const dirpath = join(claudeDir, dirname);
+    const ents = await readdir(claudeDir, { withFileTypes: true }).catch(() => []);
+    for (const ent of ents) {
+      // Top-level flat .jsonl files are real sessions too (pi writes them when no
+      // cwd is known); scanning a file as a dir throws ENOTDIR, so split the walk.
+      if (ent.isFile()) {
+        if (ent.name.endsWith('.jsonl')) entries.push({ path: join(claudeDir, ent.name), tool: 'claude' });
+        continue;
+      }
+      if (!ent.isDirectory()) continue;
+      const dirpath = join(claudeDir, ent.name);
       const glob = new Bun.Glob('*.jsonl');
       for await (const p of glob.scan(dirpath)) {
         entries.push({ path: join(dirpath, p), tool: 'claude' });
@@ -318,14 +322,14 @@ async function discoverFiles(): Promise<FileEntry[]> {
   }
 
   if (existsSync(piDir)) {
-    let dirs: string[];
-    try {
-      dirs = await readdir(piDir);
-    } catch {
-      dirs = [];
-    }
-    for (const dirname of dirs) {
-      const dirpath = join(piDir, dirname);
+    const ents = await readdir(piDir, { withFileTypes: true }).catch(() => []);
+    for (const ent of ents) {
+      if (ent.isFile()) {
+        if (ent.name.endsWith('.jsonl')) entries.push({ path: join(piDir, ent.name), tool: 'pi' });
+        continue;
+      }
+      if (!ent.isDirectory()) continue;
+      const dirpath = join(piDir, ent.name);
       const glob = new Bun.Glob('*.jsonl');
       for await (const p of glob.scan(dirpath)) {
         entries.push({ path: join(dirpath, p), tool: 'pi' });
