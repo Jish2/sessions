@@ -86,6 +86,12 @@ export interface CliArgs {
   errored: boolean;
   /** --file values (repeatable): substring path filters, AND-composed. */
   files: string[];
+  /** --print: emit results to stdout and exit instead of opening the selector. */
+  print: boolean;
+  /** --json (with --print): emit the MCP search payload instead of TSV rows. */
+  json: boolean;
+  /** --limit N: result cap (print default 20, picker default 1000). */
+  limit?: number;
 }
 
 export interface ContextSession {
