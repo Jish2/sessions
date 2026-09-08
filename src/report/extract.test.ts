@@ -28,7 +28,7 @@ writeFileSync(
   }) + '\n',
 );
 
-const roots = { claudeCode: claudeDir, pi: join(tmp, 'no-pi'), codex: join(tmp, 'no-codex') };
+const roots = { claudeCode: claudeDir, pi: [join(tmp, 'no-pi')], codex: join(tmp, 'no-codex') };
 
 describe('gatherEvents', () => {
   test('parses claude events and skips missing tool dirs', async () => {

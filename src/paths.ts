@@ -7,6 +7,7 @@
 // living beside its consumers is the same shape as getCacheDir/getDbPath in
 // src/cache.ts — this file is that, for the durable directory.
 
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -86,4 +87,31 @@ export function getClaudeProjectsDir(): string {
 /** Codex's flat rollout tree. Lazily resolved via SESSIONS_CODEX_DIR — same contract. */
 export function getCodexSessionsDir(): string {
   return process.env.SESSIONS_CODEX_DIR || join(homedir(), '.codex', 'sessions');
+}
+
+function hasExplicitPiOverride(): boolean {
+  return Boolean(
+    process.env.SESSIONS_PI_DIR || process.env.PI_CODING_AGENT_SESSION_DIR || process.env.PI_CODING_AGENT_DIR,
+  );
+}
+
+/**
+ * All pi-format session roots to index, deduped and existence-filtered.
+ *
+ * An explicit override (SESSIONS_PI_DIR / PI_CODING_AGENT_SESSION_DIR /
+ * PI_CODING_AGENT_DIR) always wins alone — tests and custom installs keep
+ * single-root behavior. With no override, every known home is scanned: Pi's
+ * default (~/.pi/agent/sessions), an ambient Tau install's TAU_CODING_AGENT_DIR,
+ * and Tau's default (~/.tau/agent/sessions). Tau is a pi rebrand that replaces
+ * the config-dir env var rather than setting PI_CODING_AGENT_DIR, so a plain
+ * ~/.pi default alone misses a Tau corpus (and vice versa).
+ */
+export function getPiSessionRoots(): string[] {
+  if (hasExplicitPiOverride()) return [getPiSessionsDir()];
+  const candidates = [
+    join(homedir(), '.pi', 'agent', 'sessions'),
+    process.env.TAU_CODING_AGENT_DIR ? join(process.env.TAU_CODING_AGENT_DIR, 'sessions') : '',
+    join(homedir(), '.tau', 'agent', 'sessions'),
+  ];
+  return [...new Set(candidates.filter((p) => p !== '' && existsSync(p)))];
 }

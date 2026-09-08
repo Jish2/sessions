@@ -60,7 +60,7 @@ writeFileSync(
     // Out-of-year noise that must be filtered.
     event('s3', '2025-11-11T11:00:00Z'),
 );
-const roots = { claudeCode: claudeDir, pi: join(tmp, 'no-pi'), codex: join(tmp, 'no-codex') };
+const roots = { claudeCode: claudeDir, pi: [join(tmp, 'no-pi')], codex: join(tmp, 'no-codex') };
 const NOW = '2026-07-13T12:00:00Z';
 
 describe('parseWrappedArgs', () => {
@@ -299,7 +299,7 @@ describe('runWrapped', () => {
       [
         'bun',
         '-e',
-        "require('./src/wrapped/index.ts').runWrapped({tz:'UTC',stdout:true,offline:true,extras:'/nope/missing.json',noContent:true,roots:{claudeCode:'/nope',pi:'/nope',codex:'/nope'}})",
+        "require('./src/wrapped/index.ts').runWrapped({tz:'UTC',stdout:true,offline:true,extras:'/nope/missing.json',noContent:true,roots:{claudeCode:'/nope',pi:['/nope'],codex:'/nope'}})",
       ],
       // Repo root derived from this file, never hardcoded: the absolute path that used
       // to live here existed on one machine, so the spawn failed for the wrong reason

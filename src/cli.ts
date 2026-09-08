@@ -8,7 +8,7 @@ const VALID_TOOLS = new Set<string>(['claude', 'codex', 'pi', 'opencode', 'curso
 function usage(): never {
   process.stderr.write(`${C.bold}sessions${C.reset} — find and resume AI coding sessions
 
-Browse sessions from Claude Code, Codex, Pi, and OpenCode with fuzzy search.
+Browse sessions from Claude Code, Codex, Pi, OpenCode, and Cursor with fuzzy search.
 Scoped to the current git repo.
 
 ${C.bold}Usage:${C.reset}

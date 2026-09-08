@@ -48,3 +48,29 @@ describe.each(['pi', 'claude'] as const)('%s discovery with a flat top-level fil
     expect(prompts).toEqual(['flat top-level prompt', 'nested session prompt']);
   });
 });
+
+describe('pi multi-home discovery (managed pi + tau)', () => {
+  test('an ambient TAU_CODING_AGENT_DIR home is scanned when no explicit override is set', async () => {
+    const { getPiSessionRoots } = await import('./paths');
+    const tauHome = join(tmp, 'tauhome');
+    mkdirSync(join(tauHome, 'sessions', 'proj-x'), { recursive: true });
+    delete process.env.SESSIONS_PI_DIR;
+    process.env.TAU_CODING_AGENT_DIR = tauHome;
+    try {
+      expect(getPiSessionRoots()).toContain(join(tauHome, 'sessions'));
+    } finally {
+      delete process.env.TAU_CODING_AGENT_DIR;
+    }
+  });
+
+  test('an explicit override wins alone', async () => {
+    const { getPiSessionRoots } = await import('./paths');
+    process.env.TAU_CODING_AGENT_DIR = join(tmp, 'tauhome');
+    process.env.SESSIONS_PI_DIR = join(tmp, 'pi');
+    try {
+      expect(getPiSessionRoots()).toEqual([join(tmp, 'pi')]);
+    } finally {
+      delete process.env.TAU_CODING_AGENT_DIR;
+    }
+  });
+});
