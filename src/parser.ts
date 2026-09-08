@@ -96,7 +96,7 @@ export function extractSessionMetadata(lines: string[], tool: Tool): SessionMeta
     if (!cwd) {
       if (tool === 'claude' && d.cwd) {
         cwd = d.cwd;
-      } else if ((tool === 'pi' || tool === 'opencode') && d.type === 'session' && d.cwd) {
+      } else if ((tool === 'pi' || tool === 'opencode' || tool === 'cursor') && d.type === 'session' && d.cwd) {
         cwd = d.cwd;
       } else if (tool === 'codex' && d.type === 'session_meta') {
         const value = asJsonString(d.payload?.cwd);
@@ -173,8 +173,9 @@ export function getCwdFromSession(lines: string[], tool: Tool): string {
 
     if (tool === 'claude') {
       if (d.cwd) return d.cwd;
-    } else if (tool === 'pi' || tool === 'opencode') {
-      // Pi's native shape; OpenCode synthesizes the same session line (see src/opencode.ts).
+    } else if (tool === 'pi' || tool === 'opencode' || tool === 'cursor') {
+      // Pi's native shape; OpenCode and Cursor synthesize the same session line
+      // (see src/opencode.ts / src/cursor.ts).
       if (d.type === 'session' && d.cwd) return d.cwd;
     } else if (tool === 'codex') {
       if (d.type === 'session_meta') {
@@ -211,7 +212,7 @@ export function sessionBranch(lines: string[], tool: Tool): string {
     }
     return branch;
   }
-  return ''; // pi, opencode: no git metadata in logs
+  return ''; // pi, opencode, cursor: no git metadata in logs
 }
 
 function clean(text: string): string {

@@ -578,7 +578,7 @@ function registerTools(server: McpServer): void {
           .describe(
             'Text to search across session messages, commands, file paths, errors, and reasoning. Natural-language queries work — results are ranked by relevance and any term may match. Omit to list recent sessions.',
           ),
-        tool: z.enum(['claude', 'codex', 'pi', 'opencode']).optional().describe('Filter to a specific tool'),
+        tool: z.enum(['claude', 'codex', 'pi', 'opencode', 'cursor']).optional().describe('Filter to a specific tool'),
         project: z.string().optional().describe('Filter to sessions from this project directory path'),
         errored: z.boolean().optional().describe('Only return sessions that hit an error'),
         files: z
@@ -631,7 +631,7 @@ function registerTools(server: McpServer): void {
         regex: z.boolean().optional().default(false).describe('Treat pattern as a JS regular expression.'),
         ignoreCase: z.boolean().optional().default(true).describe('Case-insensitive match (default true).'),
         role: z.enum(['user', 'assistant']).optional().describe('Restrict to your turns (user) or the AI (assistant).'),
-        tool: z.enum(['claude', 'codex', 'pi', 'opencode']).optional().describe('Filter to a specific tool.'),
+        tool: z.enum(['claude', 'codex', 'pi', 'opencode', 'cursor']).optional().describe('Filter to a specific tool.'),
         project: z.string().optional().describe('Filter to sessions from this project directory path.'),
         after: z.string().optional().describe('Only sessions on/after this date (YYYY-MM-DD).'),
         before: z.string().optional().describe('Only sessions on/before this date (YYYY-MM-DD).'),
@@ -706,7 +706,7 @@ function registerTools(server: McpServer): void {
       inputSchema: {
         startDate: z.string().describe('Start date inclusive (YYYY-MM-DD). Example: "2026-05-07"'),
         endDate: z.string().describe('End date inclusive (YYYY-MM-DD). Example: "2026-05-14"'),
-        tool: z.enum(['claude', 'codex', 'pi', 'opencode']).optional().describe('Filter to a specific tool'),
+        tool: z.enum(['claude', 'codex', 'pi', 'opencode', 'cursor']).optional().describe('Filter to a specific tool'),
         project: z.string().optional().describe('Filter to sessions from this project directory path'),
         detail: z
           .enum(['compact', 'highlights', 'full'])
@@ -737,7 +737,7 @@ function registerTools(server: McpServer): void {
       inputSchema: {
         startDate: z.string().describe('Start date inclusive (YYYY-MM-DD). Example: "2026-05-07"'),
         endDate: z.string().describe('End date inclusive (YYYY-MM-DD). Example: "2026-05-14"'),
-        tool: z.enum(['claude', 'codex', 'pi', 'opencode']).optional().describe('Filter to a specific tool'),
+        tool: z.enum(['claude', 'codex', 'pi', 'opencode', 'cursor']).optional().describe('Filter to a specific tool'),
         project: z.string().optional().describe('Filter to sessions from this project directory path'),
       },
       outputSchema: GetSessionMetricsOutput,
@@ -769,7 +769,7 @@ function registerTools(server: McpServer): void {
           .optional()
           .describe(`Recent-tier size (default 10, max ${MAX_PRIMER_RECENT}).`),
         days: z.number().int().min(1).optional().describe('Only include sessions from the last N days.'),
-        tool: z.enum(['claude', 'codex', 'pi', 'opencode']).optional().describe('Filter to one tool.'),
+        tool: z.enum(['claude', 'codex', 'pi', 'opencode', 'cursor']).optional().describe('Filter to one tool.'),
         worktree: z
           .boolean()
           .optional()

@@ -24,6 +24,7 @@ function whyEnv() {
     SESSIONS_PI_DIR: join(tmp, 'pi'),
     SESSIONS_CODEX_DIR: join(tmp, 'codex'),
     SESSIONS_OPENCODE_DB: join(tmp, 'opencode.db'),
+    SESSIONS_CURSOR_DIR: join(tmp, 'cursor-empty'),
     SESSIONS_ARCHIVE_DIR: join(tmp, 'archive'),
     SESSIONS_REFRESH_INTERVAL_MS: '0',
     NO_COLOR: '1',

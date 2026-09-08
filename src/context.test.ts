@@ -21,6 +21,7 @@ process.env.SESSIONS_PI_DIR = piDir;
 process.env.SESSIONS_CODEX_DIR = codexDir;
 process.env.SESSIONS_CACHE_DIR = cacheDir;
 process.env.SESSIONS_OPENCODE_DB = opencodeDb;
+process.env.SESSIONS_CURSOR_DIR = join(fixtureRoot, 'cursor-empty'); // absent → no Cursor sessions leak in
 process.env.SESSIONS_ARCHIVE_DIR = archiveDir;
 
 const cache = await import('./cache');
@@ -34,6 +35,7 @@ beforeEach(() => {
   process.env.SESSIONS_CODEX_DIR = codexDir;
   process.env.SESSIONS_CACHE_DIR = cacheDir;
   process.env.SESSIONS_OPENCODE_DB = opencodeDb;
+  process.env.SESSIONS_CURSOR_DIR = join(fixtureRoot, 'cursor-empty'); // absent → no Cursor sessions leak in
   process.env.SESSIONS_ARCHIVE_DIR = archiveDir;
   cache.closeDb();
 });

@@ -1,4 +1,4 @@
-export type Tool = 'claude' | 'pi' | 'codex' | 'opencode';
+export type Tool = 'claude' | 'pi' | 'codex' | 'opencode' | 'cursor';
 
 /** A search match localized to one message inside a session. */
 export interface MessageHit {

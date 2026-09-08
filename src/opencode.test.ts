@@ -109,6 +109,7 @@ beforeAll(() => {
   dbPath = join(tmp, 'opencode.db');
   buildFixtureDb(dbPath);
   process.env.SESSIONS_OPENCODE_DB = dbPath;
+  process.env.SESSIONS_CURSOR_DIR = join(dbPath, 'cursor-empty'); // absent → no Cursor sessions leak in
   closeOpencodeDb();
 });
 
@@ -174,11 +175,13 @@ describe('opencode module', () => {
     const copyPath = join(tmp, 'opencode-copy.db');
     copyFileSync(dbPath, copyPath);
     process.env.SESSIONS_OPENCODE_DB = copyPath;
+    process.env.SESSIONS_CURSOR_DIR = join(tmp, 'cursor-empty'); // absent → no Cursor sessions leak in
     closeOpencodeDb();
     expect(discoverOpencodeSessions()).toHaveLength(2); // handle now open + cached
     rmSync(copyPath);
     expect(discoverOpencodeSessions()).toEqual([]);
     process.env.SESSIONS_OPENCODE_DB = dbPath;
+    process.env.SESSIONS_CURSOR_DIR = join(dbPath, 'cursor-empty'); // absent → no Cursor sessions leak in
     closeOpencodeDb();
   });
 });
@@ -193,6 +196,7 @@ describe('opencode cache integration', () => {
     process.env.SESSIONS_PI_DIR = join(tmp, 'pi');
     process.env.SESSIONS_CODEX_DIR = join(tmp, 'codex');
     process.env.SESSIONS_OPENCODE_DB = dbPath;
+    process.env.SESSIONS_CURSOR_DIR = join(dbPath, 'cursor-empty'); // absent → no Cursor sessions leak in
     process.env.SESSIONS_ARCHIVE_DIR = join(tmp, 'archive'); // hermetic vault; keep off the real ~/.local/share
     for (const d of ['cache', 'claude', 'pi', 'codex']) mkdirSync(join(tmp, d), { recursive: true });
     cache = await import('./cache');

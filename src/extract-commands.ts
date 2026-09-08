@@ -88,6 +88,6 @@ export function extractCommands(lines: string[], tool: Tool): string[] {
   if (tool === 'claude') extractClaude(lines, push);
   else if (tool === 'codex') extractCodex(lines, push);
   else if (tool === 'pi') extractPi(lines, push);
-  else if (tool === 'opencode') extractOpencode(lines, push);
+  else if (tool === 'opencode' || tool === 'cursor') extractOpencode(lines, push);
   return out;
 }

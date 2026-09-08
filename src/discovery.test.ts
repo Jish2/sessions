@@ -29,6 +29,7 @@ beforeAll(() => {
   process.env.SESSIONS_CLAUDE_DIR = join(tmp, 'claude');
   process.env.SESSIONS_CODEX_DIR = join(tmp, 'codex-empty');
   process.env.SESSIONS_OPENCODE_DB = join(tmp, 'opencode.db'); // absent
+  process.env.SESSIONS_CURSOR_DIR = join(tmp, 'cursor-empty'); // absent
 });
 
 afterAll(() => {
@@ -36,6 +37,7 @@ afterAll(() => {
   delete process.env.SESSIONS_CLAUDE_DIR;
   delete process.env.SESSIONS_CODEX_DIR;
   delete process.env.SESSIONS_OPENCODE_DB;
+  delete process.env.SESSIONS_CURSOR_DIR;
   rmSync(tmp, { recursive: true, force: true });
 });
 
