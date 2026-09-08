@@ -79,6 +79,10 @@ ${C.bold}Search:${C.reset}
   With no argument, opens fzf with session summaries.
   With an argument, greps across session content for matching
   sessions, then opens fzf with the results.
+
+  --print                 Print results to stdout and exit — no selector (for
+                          scripts and agent harnesses without a TTY; --json
+                          selects the machine payload, --limit N defaults 20)
 `);
   process.exit(0);
 }
@@ -89,7 +93,7 @@ function die(msg: string): never {
 }
 
 export function parseArgs(argv: string[]): CliArgs {
-  const args: CliArgs = { toolFilter: '', searchQuery: '', scopeHere: false, errored: false, files: [] };
+  const args: CliArgs = { toolFilter: '', searchQuery: '', scopeHere: false, errored: false, files: [], print: false, json: false };
 
   let i = 0;
   while (i < argv.length) {
@@ -120,6 +124,18 @@ export function parseArgs(argv: string[]): CliArgs {
       case '--no-color':
         disableColors();
         break;
+      case '--print':
+        args.print = true;
+        break;
+      case '--json':
+        args.json = true;
+        args.print = true;
+        break;
+      case '--limit':
+        i++;
+        if (!argv[i] || !/^\d+$/.test(argv[i]!)) die(`--limit requires a positive integer`);
+        args.limit = parseInt(argv[i]!, 10);
+        break;
       default:
         if (arg.startsWith('-')) die(`unknown option: ${arg}`);
         args.searchQuery = arg;
@@ -149,6 +165,12 @@ interface SearchCall {
 export function toSearchOptions(args: CliArgs, repoRoot: string): SearchCall {
   return {
     query: args.searchQuery,
-    opts: { tool: args.toolFilter, project: repoRoot, errored: args.errored, files: args.files, limit: 1000 },
+    opts: {
+      tool: args.toolFilter,
+      project: repoRoot,
+      errored: args.errored,
+      files: args.files,
+      limit: args.limit ?? (args.print ? 20 : 1000),
+    },
   };
 }

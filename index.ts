@@ -134,11 +134,31 @@ try {
 
 if (results.length === 0) {
   if (args.searchQuery) process.stderr.write('\r\x1b[K');
+  if (args.print) {
+    // Print-mode keeps its seam even when empty: JSON consumers get the envelope.
+    if (args.json) process.stdout.write(JSON.stringify({ results: [], count: 0 }) + '\n');
+    process.stderr.write(`${C.dim}No sessions found.${C.reset}\n`);
+    process.exit(0);
+  }
   process.stderr.write(`${C.dim}No sessions found.${C.reset}\n`);
   process.exit(0);
 }
 
 const cols = parseInt(process.env.COLUMNS ?? '80', 10);
+
+// --print: the non-interactive seam (agent harnesses, scripts, pipes). Same row
+// projector as the MCP search_sessions tool, so both consumers read one shape.
+if (args.print) {
+  if (args.json) {
+    const { formatResult } = await import('./src/search-format');
+    const formatted = results.map(formatResult);
+    process.stdout.write(JSON.stringify({ results: formatted, count: formatted.length }) + '\n');
+  } else {
+    for (const r of results) process.stdout.write(formatLine(r, cols) + '\n');
+  }
+  process.exit(0);
+}
+
 const lines = results.map((r) => formatLine(r, cols));
 
 if (args.searchQuery) process.stderr.write('\r\x1b[K');

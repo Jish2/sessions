@@ -1,5 +1,6 @@
 // src/cli.test.ts
 import { test, expect, describe } from 'bun:test';
+import { join } from 'node:path';
 import { parseArgs, toSearchOptions } from './cli';
 import { formatLine, formatLineage } from './display';
 import type { SessionResult } from './types';
@@ -53,6 +54,42 @@ describe('formatLine one-line invariant', () => {
     const line = formatLine({ ...piResult, displayText: 'first para\n\n**second** para with `code`' }, 120);
     expect(line).not.toContain('\n');
     expect(line.split('\t')[5]).toBe('first para **second** para with `code`');
+  });
+});
+
+describe('parseArgs: --print / --json / --limit', () => {
+  test('--print sets print without json', () => {
+    const a = parseArgs(['--print', 'query']);
+    expect(a).toMatchObject({ print: true, json: false, searchQuery: 'query' });
+  });
+
+  test('--json implies --print', () => {
+    const a = parseArgs(['--json']);
+    expect(a).toMatchObject({ print: true, json: true });
+  });
+
+  test('--limit parses digits', () => {
+    expect(parseArgs(['--limit', '5']).limit).toBe(5);
+  });
+
+  test('--limit with a non-number dies in a child process (die() exits the process)', async () => {
+    const r = Bun.spawnSync({
+      cmd: ['bun', '-e', "import('./src/cli.ts').then((m) => m.parseArgs(['--limit', 'abc']))"],
+      cwd: join(import.meta.dir, '..'),
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    expect(r.exitCode).toBe(1);
+    expect(r.stderr.toString()).toContain('--limit requires a positive integer');
+  });
+
+  test('toSearchOptions: print defaults to a 20-row page, picker keeps 1000', () => {
+    const printed = toSearchOptions(parseArgs(['--print']), '');
+    expect(printed.opts.limit).toBe(20);
+    const picked = toSearchOptions(parseArgs([]), '');
+    expect(picked.opts.limit).toBe(1000);
+    const explicit = toSearchOptions(parseArgs(['--print', '--limit', '3']), '');
+    expect(explicit.opts.limit).toBe(3);
   });
 });
 
