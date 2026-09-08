@@ -48,6 +48,14 @@ const piResult: SessionResult = {
   forkedFrom: '',
 };
 
+describe('formatLine one-line invariant', () => {
+  test('newline-bearing displayText flattens to a single emitted line', () => {
+    const line = formatLine({ ...piResult, displayText: 'first para\n\n**second** para with `code`' }, 120);
+    expect(line).not.toContain('\n');
+    expect(line.split('\t')[5]).toBe('first para **second** para with `code`');
+  });
+});
+
 describe('formatLine fork badge', () => {
   test('branches 0: no badge', () => {
     expect(formatLine(piResult, 120)).not.toContain('⑂');

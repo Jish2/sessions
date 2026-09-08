@@ -18,9 +18,15 @@ function relativeDate(isoDate: string): string {
   }
 }
 
+// FTS snippets and stored prompts can carry raw newlines (code blocks, markdown
+// paragraphs); one emitted line is one fzf/builtin entry, so fields must flatten.
+function oneLine(text: string): string {
+  return text.replace(/\s*\n+\s*/g, ' ').trim();
+}
+
 export function formatLine(r: SessionResult, cols: number): string {
   const dirName = basename(r.cwd) || '(root)';
-  const prompt = r.displayText || '(no prompt)';
+  const prompt = oneLine(r.displayText || '(no prompt)');
 
   const dotColor = r.exists ? C.green : C.red;
   const dot = r.exists ? `${dotColor}●${C.reset}` : `${dotColor}○${C.reset}`;
