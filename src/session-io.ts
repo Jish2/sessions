@@ -1,12 +1,14 @@
 import { readFileSync, statSync } from 'node:fs';
 import { type Tool } from './types';
 import { isOpencodePath, readOpencodeSession, opencodeStat } from './opencode';
+import { isCursorPath, readCursorSession } from './cursor';
 import { getArchiveDir, getManifestPath, loadManifest, type Manifest, type VaultEntry } from './vault/archive';
 
 // Generic session IO: every consumer (indexer, scanner, digest, MCP) reads a
 // session as JSONL-style `lines[]` through here. JSONL tools read their file
 // directly; OpenCode sessions — synthetic dbPath/sessionId paths with no real
-// file — are reconstructed from the SQLite DB by src/opencode.ts.
+// file — are reconstructed from the SQLite DB by src/opencode.ts, and Cursor
+// transcripts are normalized to the shared message shape by src/cursor.ts.
 //
 // When a session's live source is gone (vendor GC, a deleted DB row), the read
 // falls back to the transcript vault (src/vault/archive.ts): every parseable
@@ -46,6 +48,10 @@ export function readSessionLines(filePath: string, tool?: Tool): string[] {
     const lines = readOpencodeSession(filePath);
     if (lines.length > 0) return lines;
     // DB row (or the whole DB) is gone — fall back to the vault export below.
+  } else if (tool === 'cursor' || (tool === undefined && isCursorPath(filePath))) {
+    const lines = readCursorSession(filePath);
+    if (lines.length > 0) return lines;
+    // Transcript is gone — fall back to the vault export below.
   } else {
     try {
       return readFileSync(filePath, 'utf-8').trimEnd().split('\n');

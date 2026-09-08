@@ -3,7 +3,7 @@ import { resolveRepo } from './repo';
 import { getContextPrimer } from './cache';
 import type { ContextPrimer, Tool } from './types';
 
-const VALID_TOOLS = new Set<string>(['claude', 'codex', 'pi', 'opencode']);
+const VALID_TOOLS = new Set<string>(['claude', 'codex', 'pi', 'opencode', 'cursor']);
 
 export interface ContextArgs {
   here: boolean; // scope to current repo (always true for this command)

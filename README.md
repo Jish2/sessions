@@ -2,7 +2,7 @@
 
 <p align="center">
   Search and memory across your AI coding sessions.<br/>
-  One index over <strong>Claude Code</strong>, <strong>Codex</strong>, <strong>Pi</strong>, and <strong>OpenCode</strong> — fuzzy-find and resume past sessions from the CLI, give agents recall over prior work via MCP, and see where your tokens go.
+  One index over <strong>Claude Code</strong>, <strong>Codex</strong>, <strong>Pi</strong>, <strong>OpenCode</strong>, and <strong>Cursor</strong> — fuzzy-find and resume past sessions from the CLI, give agents recall over prior work via MCP, and see where your tokens go.
 </p>
 
 <p align="center">
@@ -12,7 +12,7 @@
 
 ## Why
 
-Every AI coding session leaves a transcript behind. Claude Code buries them in `~/.claude/projects/`, Codex and Pi have their own layouts, OpenCode keeps everything in a SQLite database — and everything in them (what you tried, what you decided, what broke) is effectively write-only.
+Every AI coding session leaves a transcript behind. Claude Code buries them in `~/.claude/projects/`, Codex and Pi have their own layouts, OpenCode keeps everything in a SQLite database, Cursor scatters them under `~/.cursor/projects/` — and everything in them (what you tried, what you decided, what broke) is effectively write-only.
 
 `sessions` builds a full-text search index over all of it and makes that history useful in three ways:
 
@@ -151,7 +151,7 @@ sessions vault inspect <target>  # One archived session by original path or sess
 | `uninstall`                     | Remove plugin, MCP config, and the SessionStart hook from all tools. Durable data in `~/.local/share/sessions` (the memory store and the transcript archive) is preserved                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `cleanup`                       | Full reset: uninstall plugin + clear search index. The transcript archive is untouched — a cleared index rebuilds from the vault                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `--here`                        | Scope to the current git repo (default: all projects)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `--tool <name>`                 | Filter by tool: `claude`, `codex`, `pi`, or `opencode`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `--tool <name>`                 | Filter by tool: `claude`, `codex`, `pi`, `opencode`, or `cursor`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `--errored`                     | Only show sessions that hit an error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `--file <path>`                 | Only sessions that touched or read this path (substring match; repeatable — every path must match). Newest first when no query is given                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--mcp`                         | Start as an MCP server (stdio transport)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -195,7 +195,7 @@ When you pick a session, `sessions` displays the resume command and copies it to
   (copied to clipboard)
 ```
 
-For Claude Code sessions, the command includes `--resume <session-id>`; for OpenCode, `opencode --session <session-id>`. For Pi and Codex sessions, it navigates to the project directory (these tools don't support direct session resume).
+For Claude Code sessions, the command includes `--resume <session-id>`; for OpenCode, `opencode --session <session-id>`. For Pi, Codex, and Cursor sessions, it navigates to the project directory (these tools don't support direct session resume).
 
 ## Why: explain code
 
@@ -434,6 +434,7 @@ The fun slides are **dynamically selected**: every candidate stat is scored for 
 | Pi          | `~/.pi/agent/sessions/`               |
 | Codex       | `~/.codex/sessions/`                  |
 | OpenCode    | `~/.local/share/opencode/opencode.db` |
+| Cursor      | `~/.cursor/projects/<project>/agent-transcripts/` |
 
 Each session file is parsed to extract:
 
@@ -462,7 +463,7 @@ The search index is a disposable cache: it prunes rows when source transcripts v
 
 The **vault** is the durable copy. On every index refresh, each parseable transcript is archived to `~/.local/share/sessions/archive/` (raw bytes, one file per session, latest snapshot per file). This directory is the same durable-data convention that `sessions uninstall` already leaves alone, and it is **on by default** — the point is that archiving happens before anyone remembers to enable it. Set `SESSIONS_ARCHIVE_DIR` to relocate it.
 
-The vault is also a **discovery source**: a session whose source file is gone is re-indexed from its vault copy under its original path, so search, resume commands, and message reads keep working. OpenCode is the one exception to raw-bytes archiving — its sessions are SQLite rows with no files, so a normalized JSONL export (the same shape the parser reads) is archived instead.
+The vault is also a **discovery source**: a session whose source file is gone is re-indexed from its vault copy under its original path, so search, resume commands, and message reads keep working. Two tools are exceptions to raw-bytes archiving: OpenCode sessions are SQLite rows with no files, and Cursor transcripts are normalized on read — for both, a normalized JSONL export (the same shape the parser reads) is archived instead.
 
 Inspect the archive:
 

@@ -53,4 +53,5 @@ export const toolColor: ToolColors = {
   pi: C.green,
   codex: C.blue,
   opencode: C.yellow,
+  cursor: C.cyan,
 };
