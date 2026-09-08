@@ -15,6 +15,7 @@ import { readSessionLines } from './session-io';
 import { getCwdFromSession, firstPrompt, extractMessages, messageCount } from './parser';
 import { extractFiles, extractFilesRead } from './extract-files';
 import { extractCommands } from './extract-commands';
+import { asJsonString } from './extract-util';
 import type { JsonValue } from './extract-util';
 
 const j = (o: JsonValue): string => JSON.stringify(o);
@@ -137,11 +138,11 @@ describe('readCursorSession', () => {
   test('synthesizes the normalized session shape', () => {
     const lines = readCursorSession(chatPath()).map((l) => tryParseJsonSafe(l));
     expect(lines[0]?.type).toBe('session');
-    expect(asString(lines[0]?.cwd)).toBe(realCwd);
-    expect(asString(lines[0]?.timestamp).startsWith('2')).toBe(true);
+    expect(asJsonString(lines[0]?.cwd)).toBe(realCwd);
+    expect(asJsonString(lines[0]?.timestamp)?.startsWith('2')).toBe(true);
     const last = lines[lines.length - 1]!;
     expect(last.type).toBe('cursor-meta');
-    expect(asString(last.timestamp)).toContain('2026-09-01');
+    expect(asJsonString(last.timestamp)).toContain('2026-09-01');
   });
 
   test('normalizes blocks and drops non-turns', () => {
@@ -219,10 +220,4 @@ function tryParseJsonSafe(line: string): Record<string, JsonValue | undefined> |
   } catch {
     return null;
   }
-}
-function asObj(v: unknown): Record<string, unknown> | undefined {
-  return typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : undefined;
-}
-function asString(v: unknown): string {
-  return typeof v === 'string' ? v : '';
 }

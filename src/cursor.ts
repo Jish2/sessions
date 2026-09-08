@@ -103,7 +103,7 @@ export function decodeCursorSlug(slug: string): string {
  * drifted across releases; cover both eras. Unknown tools pass through lowercased —
  * extractors only match the names they know, so a passthrough name is inert.
  */
-const CURSOR_TOOL_NAMES: Record<string, string> = {
+const CURSOR_TOOL_NAMES = {
   read: 'read',
   read_file: 'read',
   write: 'write',
@@ -123,7 +123,7 @@ const CURSOR_TOOL_NAMES: Record<string, string> = {
   list: 'list',
   list_dir: 'list',
   codebase_search: 'grep',
-};
+} satisfies Record<string, string>;
 
 /** Map one raw Cursor content chunk to the normalized block, or null to drop it. */
 function mapBlock(raw: JsonObject): JsonObject | null {
@@ -139,7 +139,10 @@ function mapBlock(raw: JsonObject): JsonObject | null {
     case 'tool_use': {
       const name = asJsonString(raw.name);
       if (!name) return null;
-      const block: JsonObject = { type: 'tool', tool: CURSOR_TOOL_NAMES[name.toLowerCase()] ?? name.toLowerCase() };
+      const lower = name.toLowerCase();
+      // SAFETY: the `in` guard establishes lower is a key of CURSOR_TOOL_NAMES.
+      const mapped = lower in CURSOR_TOOL_NAMES ? CURSOR_TOOL_NAMES[lower as keyof typeof CURSOR_TOOL_NAMES] : undefined;
+      const block: JsonObject = { type: 'tool', tool: mapped ?? lower };
       if (raw.input !== undefined) block.state = { input: raw.input };
       return block;
     }
