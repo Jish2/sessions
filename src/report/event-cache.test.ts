@@ -18,7 +18,7 @@ beforeEach(() => {
   box = join(tmp, `case${caseNo++}`);
   mkdirSync(box, { recursive: true });
   process.env.SESSIONS_CACHE_DIR = join(box, 'cache');
-  roots = { claudeCode: join(box, 'claude'), pi: join(box, 'no-pi'), codex: join(box, 'no-codex') };
+  roots = { claudeCode: join(box, 'claude'), pi: [join(box, 'no-pi')], codex: join(box, 'no-codex') };
   mkdirSync(roots.claudeCode, { recursive: true });
 });
 

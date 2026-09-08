@@ -7,7 +7,7 @@ import { cwdUnder } from './repo';
 import { discoverOpencodeSessions } from './opencode';
 import { discoverCursorSessions } from './cursor';
 import { readSessionLines } from './session-io';
-import { getPiSessionsDir, getClaudeProjectsDir, getCodexSessionsDir } from './paths';
+import { getPiSessionRoots, getClaudeProjectsDir, getCodexSessionsDir } from './paths';
 
 // Lazily resolved per call (never frozen at import) via the shared resolvers so the
 // scanner honors the same SESSIONS_*_DIR overrides as the index and the report.
@@ -147,10 +147,13 @@ export async function scanSessions(
   }
   if (toolFilter === '' || toolFilter === 'pi') {
     const piPrefix = repoRoot ? `-${claudePrefix}-` : '--';
-    // Resolved per call (not frozen at import) via the shared resolver so the
+    // Resolved per call (not frozen at import) via the shared resolvers so the
     // scanner honors the same SESSIONS_PI_DIR / PI_CODING_AGENT_* overrides as
-    // the index and the report.
-    scans.push(scanDir(getPiSessionsDir(), piPrefix, 'pi', repoRoot, searchAll, normalizedQuery));
+    // the index and the report — and scans every pi-format home when nothing
+    // overrides (managed pi plus a Tau install both index).
+    for (const piDir of getPiSessionRoots()) {
+      scans.push(scanDir(piDir, piPrefix, 'pi', repoRoot, searchAll, normalizedQuery));
+    }
   }
   if (toolFilter === '' || toolFilter === 'codex') {
     scans.push(scanDir(getCodexSessionsDir(), '', 'codex', repoRoot, searchAll, normalizedQuery));

@@ -18,7 +18,7 @@ import {
   type PrimerMemory,
 } from './types';
 import { activeMemoryFor } from './memory/retrieve';
-import { getPiSessionsDir, getClaudeProjectsDir, getCodexSessionsDir, getArchiveDir } from './paths';
+import { getPiSessionRoots, getClaudeProjectsDir, getCodexSessionsDir, getArchiveDir } from './paths';
 import type { MemoryRecord } from './memory/types';
 import {
   extractMessages,
@@ -71,11 +71,8 @@ function getClaudeDir(): string {
   // Shared resolver (src/paths.ts), lazily resolved for hermetic tests.
   return getClaudeProjectsDir();
 }
-function getPiDir(): string {
-  // Shared resolver (src/paths.ts): honors SESSIONS_PI_DIR and Pi's own
-  // PI_CODING_AGENT_SESSION_DIR / PI_CODING_AGENT_DIR overrides, and keeps the
-  // index, scanner, and report pointed at the same tree.
-  return getPiSessionsDir();
+function getPiRoots(): string[] {
+  return getPiSessionRoots();
 }
 function getCodexDir(): string {
   // Shared resolver (src/paths.ts), lazily resolved for hermetic tests.
@@ -301,7 +298,6 @@ interface FileEntry {
 async function discoverFiles(): Promise<FileEntry[]> {
   const entries: FileEntry[] = [];
   const claudeDir = getClaudeDir();
-  const piDir = getPiDir();
   const codexDir = getCodexDir();
 
   if (existsSync(claudeDir)) {
@@ -322,7 +318,8 @@ async function discoverFiles(): Promise<FileEntry[]> {
     }
   }
 
-  if (existsSync(piDir)) {
+  for (const piDir of getPiRoots()) {
+    if (!existsSync(piDir)) continue;
     const ents = await readdir(piDir, { withFileTypes: true }).catch(() => []);
     for (const ent of ents) {
       if (ent.isFile()) {

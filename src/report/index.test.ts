@@ -31,7 +31,7 @@ writeFileSync(
     },
   }) + '\n',
 );
-const roots = { claudeCode: claudeDir, pi: join(tmp, 'no-pi'), codex: join(tmp, 'no-codex') };
+const roots = { claudeCode: claudeDir, pi: [join(tmp, 'no-pi')], codex: join(tmp, 'no-codex') };
 
 // Separate fixture set for --here: three events across two projects plus one with no cwd.
 const hereClaudeDir = join(tmp, 'claude-here');
@@ -57,7 +57,7 @@ writeFileSync(
     hereEvent('s2', '/Users/x/Developer/otherproj', 100, 50) +
     hereEvent('s3', undefined, 10, 5),
 );
-const hereRoots = { claudeCode: hereClaudeDir, pi: join(tmp, 'no-pi'), codex: join(tmp, 'no-codex') };
+const hereRoots = { claudeCode: hereClaudeDir, pi: [join(tmp, 'no-pi')], codex: join(tmp, 'no-codex') };
 
 describe('parseReportArgs', () => {
   test('defaults', () => {

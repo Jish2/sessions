@@ -1,5 +1,3 @@
-import { homedir } from 'node:os';
-import { join } from 'node:path';
 import type { UsageEvent } from './parsers/types.ts';
 import type { ToolId } from './types.ts';
 import {
@@ -15,7 +13,7 @@ import { parseCodex, parseCodexFile } from './parsers/codex.ts';
 import { parseOpencode } from './parsers/opencode.ts';
 import { walkJsonl, pruneThreshold } from './parsers/walk.ts';
 import { getOpencodeDbPath } from '../opencode.ts';
-import { getPiSessionsDir } from '../paths.ts';
+import { getPiSessionRoots, getClaudeProjectsDir, getCodexSessionsDir } from '../paths.ts';
 import {
   openEventCache,
   statAll,
@@ -29,7 +27,8 @@ import {
 
 export interface ReportRoots {
   claudeCode: string;
-  pi: string;
+  /** Every pi-format root to walk (managed pi default plus a Tau install — see paths.ts). */
+  pi: string[];
   codex: string;
   /** OpenCode's SQLite DB path (not a directory) — its sessions live in one DB. Optional so
    *  callers that predate OpenCode support (and tests) need not supply it. */
@@ -37,14 +36,13 @@ export interface ReportRoots {
 }
 
 export function defaultRoots(): ReportRoots {
-  const home = homedir();
+  // Shared resolvers (SESSIONS_*_DIR / PI_CODING_AGENT_* / TAU overrides included) —
+  // one source of truth with the search index and scanner. Resolved per call, never
+  // frozen at import, so tests redirect via env.
   return {
-    claudeCode: join(home, '.claude', 'projects'),
-    // Same resolution (SESSIONS_PI_DIR / PI_CODING_AGENT_* overrides included) as
-    // the search index and scanner — one source of truth.
-    pi: getPiSessionsDir(),
-    codex: join(home, '.codex', 'sessions'),
-    // Same resolution (env override included) as the search index — one source of truth.
+    claudeCode: getClaudeProjectsDir(),
+    pi: getPiSessionRoots(),
+    codex: getCodexSessionsDir(),
     opencode: getOpencodeDbPath(),
   };
 }
@@ -68,18 +66,19 @@ function fileSources(roots: ReportRoots, want: (t: ToolId) => boolean): FileSour
   const out: FileSource[] = [];
   if (want('claude-code')) out.push({ root: roots.claudeCode, parseFile: parseClaudeCodeFile });
   if (want('pi'))
-    out.push({
-      root: roots.pi,
-      parseFile: async (p) => {
+    for (const root of roots.pi)
+      out.push({
+        root,
+        parseFile: async (p) => {
         const events = await parsePiFile(p);
         // Register each Pi dispatch under its own (already final) type, so the
         // cross-file resolveAgentTypes pass confirms it instead of renaming it
         // to 'unknown' — Pi has no parent-record naming step to wait for.
-        const agentTypes: Record<string, AgentName> = {};
-        for (const e of events) if (e.agent) agentTypes[e.agent.id] = { type: e.agent.type, strong: true };
-        return { events, agentTypes };
-      },
-    });
+          const agentTypes: Record<string, AgentName> = {};
+          for (const e of events) if (e.agent) agentTypes[e.agent.id] = { type: e.agent.type, strong: true };
+          return { events, agentTypes };
+        },
+      });
   if (want('codex'))
     out.push({ root: roots.codex, parseFile: async (p) => ({ events: await parseCodexFile(p), agentTypes: {} }) });
   return out;
@@ -90,7 +89,7 @@ async function gatherDirect(roots: ReportRoots, want: (t: ToolId) => boolean, si
   const walk = { since };
   const tasks: Promise<UsageEvent[]>[] = [];
   if (want('claude-code')) tasks.push(parseClaudeCode(roots.claudeCode, walk));
-  if (want('pi')) tasks.push(parsePi(roots.pi, walk));
+  if (want('pi')) for (const root of roots.pi) tasks.push(parsePi(root, walk));
   if (want('codex')) tasks.push(parseCodex(roots.codex, walk));
   return (await Promise.all(tasks)).flat();
 }
