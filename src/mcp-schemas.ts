@@ -18,7 +18,7 @@
 // interfaces is recorded as a future item in the contract.
 import { z } from 'zod';
 
-const toolName = z.enum(['claude', 'pi', 'codex', 'opencode']);
+const toolName = z.enum(['claude', 'pi', 'codex', 'opencode', 'cursor']);
 const role = z.enum(['user', 'assistant']);
 const period = z.object({ start: z.string(), end: z.string() });
 /** Hour-of-day / tool-name → count maps, which serialize as plain objects. */
@@ -321,7 +321,7 @@ export const GetSessionMetricsOutput = z.object({
 export const GetContextPrimerOutput = z.object({
   // '' on the not-a-git-repo sentinel, where there is no repo to label.
   repoLabel: z.string(),
-  toolFilter: z.enum(['claude', 'pi', 'codex', 'opencode', '']),
+  toolFilter: z.enum(['claude', 'pi', 'codex', 'opencode', 'cursor', '']),
   recent: z.array(
     z.object({
       sessionId: z.string(),

@@ -141,7 +141,7 @@ export function extractFiles(lines: string[], tool: Tool): string[] {
   if (tool === 'claude') extractClaude(lines, push);
   else if (tool === 'codex') extractCodex(lines, push);
   else if (tool === 'pi') extractPi(lines, push);
-  else if (tool === 'opencode') extractOpencode(lines, push);
+  else if (tool === 'opencode' || tool === 'cursor') extractOpencode(lines, push);
 
   return out;
 }
@@ -193,7 +193,7 @@ export function extractFilesRead(lines: string[], tool: Tool): string[] {
   };
   if (tool === 'claude') extractClaudeRead(lines, push);
   else if (tool === 'pi') extractPiRead(lines, push);
-  else if (tool === 'opencode') extractOpencodeRead(lines, push);
+  else if (tool === 'opencode' || tool === 'cursor') extractOpencodeRead(lines, push);
   return out;
 }
 

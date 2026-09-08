@@ -35,6 +35,7 @@ import { extractErrors } from './extract-errors';
 import { extractThinking } from './extract-thinking';
 import { extractCustomContext } from './extract-custom';
 import { discoverOpencodeSessions, collectOpencodeSubagentText, closeOpencodeDb, opencodeStat } from './opencode';
+import { discoverCursorSessions, collectCursorSubagentText } from './cursor';
 import { readSessionLines, statSession } from './session-io';
 import { archiveFile, listArchived, loadManifest, saveManifest, type Manifest } from './vault/archive';
 // The same cap the search projection uses. Aliased at the import so the name reads as the
@@ -349,6 +350,11 @@ async function discoverFiles(): Promise<FileEntry[]> {
   // Returns [] when the DB is absent.
   entries.push(...discoverOpencodeSessions());
 
+  // Cursor keeps real per-chat JSONL transcripts under ~/.cursor/projects; discovery
+  // returns parent chats only (subagent transcripts fold into their parent).
+  // Returns [] when the projects tree is absent.
+  entries.push(...discoverCursorSessions());
+
   // Vault-only sessions: transcripts whose live source is gone but whose archived
   // copy survives. Appended under their ORIGINAL path so they re-index with the same
   // identity; parsing reads through the session-io vault fallback. Skip any path a
@@ -384,10 +390,12 @@ function collectSubagentContent(filePath: string): string {
 }
 
 /** Searchable subagent text folded into the parent session: Claude keeps sibling
- *  transcript files, OpenCode keeps child sessions in its DB; other tools have none. */
+ *  transcript files, OpenCode keeps child sessions in its DB, Cursor nests them in
+ *  the chat's subagents/ dir; other tools have none. */
 function collectSubagentText(filePath: string, tool: Tool): string {
   if (tool === 'claude') return collectSubagentContent(filePath);
   if (tool === 'opencode') return collectOpencodeSubagentText(filePath);
+  if (tool === 'cursor') return collectCursorSubagentText(filePath);
   return '';
 }
 

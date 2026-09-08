@@ -210,6 +210,7 @@ describe('opencode export round-trip', () => {
     );
     db.close();
     process.env.SESSIONS_OPENCODE_DB = dbPath;
+    process.env.SESSIONS_CURSOR_DIR = join(tmp, 'cursor-empty'); // absent → no Cursor sessions leak in
     closeOpencodeDb();
   });
 

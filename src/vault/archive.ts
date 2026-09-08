@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { type Tool } from '../types';
 import { getArchiveDir } from '../paths';
 import { serializeOpencodeSession } from '../opencode';
+import { serializeCursorSession } from '../cursor';
 
 export { getArchiveDir };
 
@@ -57,7 +58,7 @@ function encodePath(originalPath: string): string {
  * untouched by the manifest being unreadable.
  */
 const vaultEntrySchema = z.object({
-  tool: z.enum(['claude', 'pi', 'codex', 'opencode']),
+  tool: z.enum(['claude', 'pi', 'codex', 'opencode', 'cursor']),
   cwd: z.string(),
   sessionId: z.string(),
   mtime: z.number(),
@@ -110,7 +111,8 @@ export function saveManifest(dir: string, manifest: Manifest): void {
  * saved once per refresh by the caller (never per file), so this only mutates the
  * in-memory map.
  *
- * OpenCode is serialized from its DB rows; every other tool is a raw byte copy.
+ * OpenCode is serialized from its DB rows and Cursor from its normalize-on-read
+ * materialization; every other tool is a raw byte copy.
  * A file that is itself inside the vault is never archived (self-copy guard).
  */
 export function archiveFile(
@@ -130,6 +132,8 @@ export function archiveFile(
   mkdirSync(toolDir, { recursive: true });
   if (entry.tool === 'opencode') {
     writeFileSync(vaultPath, serializeOpencodeSession(entry.path));
+  } else if (entry.tool === 'cursor') {
+    writeFileSync(vaultPath, serializeCursorSession(entry.path));
   } else {
     copyFileSync(entry.path, vaultPath);
   }

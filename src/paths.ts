@@ -65,6 +65,17 @@ export function getPiSessionsDir(): string {
   return join(homedir(), '.pi', 'agent', 'sessions');
 }
 
+/**
+ * Where Cursor keeps per-project agent transcripts. One resolver shared by the index
+ * (src/cache.ts), the no-index scanner (src/scanner.ts), and the normalizer
+ * (src/cursor.ts) so all three always look at the same tree.
+ * Honors SESSIONS_CURSOR_DIR (tests, unusual setups); resolved lazily — never frozen
+ * at import — for the same test-hermeticity reason as getDataDir above.
+ */
+export function getCursorProjectsDir(): string {
+  return process.env.SESSIONS_CURSOR_DIR || join(homedir(), '.cursor', 'projects');
+}
+
 /** Claude Code's per-project transcripts root. Lazily resolved (never frozen at
  *  import) so tests can redirect it via SESSIONS_CLAUDE_DIR — same contract as
  *  getPiSessionsDir above. */

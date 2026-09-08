@@ -3,7 +3,7 @@ import { type Tool, type CliArgs } from './types';
 import type { SearchOptions } from './cache';
 import { resolveRepo } from './repo';
 
-const VALID_TOOLS = new Set<string>(['claude', 'codex', 'pi', 'opencode']);
+const VALID_TOOLS = new Set<string>(['claude', 'codex', 'pi', 'opencode', 'cursor']);
 
 function usage(): never {
   process.stderr.write(`${C.bold}sessions${C.reset} — find and resume AI coding sessions
@@ -101,7 +101,7 @@ export function parseArgs(argv: string[]): CliArgs {
       case '--tool':
         i++;
         if (!argv[i] || !VALID_TOOLS.has(argv[i]!)) {
-          die(`--tool requires one of: claude, codex, pi, opencode`);
+          die(`--tool requires one of: claude, codex, pi, opencode, cursor`);
         }
         // SAFETY: VALID_TOOLS.has() above proves argv[i] is a Tool.
         args.toolFilter = argv[i] as Tool;

@@ -5,6 +5,7 @@ import { type Tool, type SessionResult } from './types';
 import { extractSessionMetadata, getCwdFromSession, firstPrompt, contentMatches, findMatchContext } from './parser';
 import { cwdUnder } from './repo';
 import { discoverOpencodeSessions } from './opencode';
+import { discoverCursorSessions } from './cursor';
 import { readSessionLines } from './session-io';
 import { getPiSessionsDir, getClaudeProjectsDir, getCodexSessionsDir } from './paths';
 
@@ -157,6 +158,9 @@ export async function scanSessions(
   if (toolFilter === '' || toolFilter === 'opencode') {
     scans.push(scanOpencode(repoRoot, searchAll, normalizedQuery));
   }
+  if (toolFilter === '' || toolFilter === 'cursor') {
+    scans.push(scanCursor(repoRoot, searchAll, normalizedQuery));
+  }
 
   const all = (await Promise.all(scans)).flat();
   all.sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
@@ -168,6 +172,19 @@ async function scanOpencode(repoRoot: string, searchAll: boolean, searchQuery: s
   const results: SessionResult[] = [];
   for (const s of discoverOpencodeSessions()) {
     const r = await processSession(s.path, 'opencode', repoRoot, searchAll, searchQuery);
+    if (r) results.push(r);
+  }
+  return results;
+}
+
+/** No-index fallback for Cursor: normalize each parent chat transcript, then filter as usual. */
+async function scanCursor(repoRoot: string, searchAll: boolean, searchQuery: string): Promise<SessionResult[]> {
+  // Cursor transcripts are real files, but two levels deeper than the other tools'
+  // per-project dirs (<slug>/agent-transcripts/<chatId>/<chatId>.jsonl), so reuse
+  // the index's discovery walker rather than teach scanDir the nesting.
+  const results: SessionResult[] = [];
+  for (const s of discoverCursorSessions()) {
+    const r = await processSession(s.path, 'cursor', repoRoot, searchAll, searchQuery);
     if (r) results.push(r);
   }
   return results;

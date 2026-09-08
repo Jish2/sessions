@@ -230,6 +230,7 @@ function setEnv(): void {
   process.env.SESSIONS_PI_DIR = join(tmp, 'pi');
   process.env.SESSIONS_CODEX_DIR = join(tmp, 'codex');
   process.env.SESSIONS_OPENCODE_DB = join(tmp, 'opencode.db');
+  process.env.SESSIONS_CURSOR_DIR = join(tmp, 'cursor-empty'); // absent → no Cursor sessions leak in
   process.env.SESSIONS_ARCHIVE_DIR = join(tmp, 'archive');
   process.env.SESSIONS_REFRESH_INTERVAL_MS = '0';
 }
@@ -359,6 +360,7 @@ describe('absence identity (no embedder ⇒ lexical behavior)', () => {
     process.env.SESSIONS_PI_DIR = join(etmp, 'pi');
     process.env.SESSIONS_CODEX_DIR = join(etmp, 'codex');
     process.env.SESSIONS_OPENCODE_DB = join(etmp, 'opencode.db');
+    process.env.SESSIONS_CURSOR_DIR = join(etmp, 'cursor-empty'); // absent → no Cursor sessions leak in
     process.env.SESSIONS_ARCHIVE_DIR = join(etmp, 'archive');
     process.env.SESSIONS_REFRESH_INTERVAL_MS = '0';
     mkdirSync(join(etmp, 'claude'), { recursive: true });
