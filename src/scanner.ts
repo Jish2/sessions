@@ -1,17 +1,15 @@
 import { readdir } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { existsSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { type Tool, type SessionResult } from './types';
 import { extractSessionMetadata, getCwdFromSession, firstPrompt, contentMatches, findMatchContext } from './parser';
 import { cwdUnder } from './repo';
 import { discoverOpencodeSessions } from './opencode';
 import { readSessionLines } from './session-io';
-import { getPiSessionsDir } from './paths';
+import { getPiSessionsDir, getClaudeProjectsDir, getCodexSessionsDir } from './paths';
 
-const home = homedir();
-const CLAUDE_DIR = join(home, '.claude/projects');
-const CODEX_DIR = join(home, '.codex/sessions');
+// Lazily resolved per call (never frozen at import) via the shared resolvers so the
+// scanner honors the same SESSIONS_*_DIR overrides as the index and the report.
 
 async function processSession(
   filePath: string,
@@ -101,13 +99,19 @@ async function scanDir(
       if (r) results.push(r);
     }
   } else {
-    let dirs: string[];
-    try {
-      dirs = await readdir(sessionDir);
-    } catch {
-      return [];
-    }
-    for (const dirname of dirs) {
+    const ents = await readdir(sessionDir, { withFileTypes: true }).catch(() => []);
+    for (const ent of ents) {
+      // Top-level flat .jsonl files are real sessions too (pi writes them when no
+      // cwd is known); scanning a file as a dir throws ENOTDIR, so split the walk.
+      if (ent.isFile()) {
+        if (ent.name.endsWith('.jsonl')) {
+          const r = await processSession(join(sessionDir, ent.name), tool, repoRoot, searchAll, searchQuery);
+          if (r) results.push(r);
+        }
+        continue;
+      }
+      if (!ent.isDirectory()) continue;
+      const dirname = ent.name;
       // Cheap loose pre-filter on the encoded slug — intentionally permissive so it
       // never skips a real descendant/worktree dir (the slug separator is ambiguous
       // here). The precise, boundary-aware cwd check in processSession (`cwdUnder`)
@@ -138,7 +142,7 @@ export async function scanSessions(
   const scans: Promise<SessionResult[]>[] = [];
 
   if (toolFilter === '' || toolFilter === 'claude') {
-    scans.push(scanDir(CLAUDE_DIR, claudePrefix, 'claude', repoRoot, searchAll, normalizedQuery));
+    scans.push(scanDir(getClaudeProjectsDir(), claudePrefix, 'claude', repoRoot, searchAll, normalizedQuery));
   }
   if (toolFilter === '' || toolFilter === 'pi') {
     const piPrefix = repoRoot ? `-${claudePrefix}-` : '--';
@@ -148,7 +152,7 @@ export async function scanSessions(
     scans.push(scanDir(getPiSessionsDir(), piPrefix, 'pi', repoRoot, searchAll, normalizedQuery));
   }
   if (toolFilter === '' || toolFilter === 'codex') {
-    scans.push(scanDir(CODEX_DIR, '', 'codex', repoRoot, searchAll, normalizedQuery));
+    scans.push(scanDir(getCodexSessionsDir(), '', 'codex', repoRoot, searchAll, normalizedQuery));
   }
   if (toolFilter === '' || toolFilter === 'opencode') {
     scans.push(scanOpencode(repoRoot, searchAll, normalizedQuery));

@@ -64,3 +64,15 @@ export function getPiSessionsDir(): string {
   if (process.env.PI_CODING_AGENT_DIR) return join(process.env.PI_CODING_AGENT_DIR, 'sessions');
   return join(homedir(), '.pi', 'agent', 'sessions');
 }
+
+/** Claude Code's per-project transcripts root. Lazily resolved (never frozen at
+ *  import) so tests can redirect it via SESSIONS_CLAUDE_DIR — same contract as
+ *  getPiSessionsDir above. */
+export function getClaudeProjectsDir(): string {
+  return process.env.SESSIONS_CLAUDE_DIR || join(homedir(), '.claude', 'projects');
+}
+
+/** Codex's flat rollout tree. Lazily resolved via SESSIONS_CODEX_DIR — same contract. */
+export function getCodexSessionsDir(): string {
+  return process.env.SESSIONS_CODEX_DIR || join(homedir(), '.codex', 'sessions');
+}
